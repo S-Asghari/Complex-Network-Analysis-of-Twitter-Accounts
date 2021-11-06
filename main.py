@@ -4,48 +4,48 @@ import networkx as nx
 
 def unweightedGraph_runFunctions(G):
 
-    # functions.illustrate_graph(G)
-    # functions.degree_distribution(G)
-    # functions.betweenness_centrality(G)
-    # functions.pagerank(G)
-    # functions.closeness_centrality(G)
-    # functions.eigenvector_centrality(G)
-    # functions.katz_centrality(G)
-    # functions.clustering_coefficient(G)
+    functions.illustrate_graph(G)
+    functions.degree_distribution(G)
+    functions.betweenness_centrality(G)
+    functions.pagerank(G)
+    functions.closeness_centrality(G)
+    functions.eigenvector_centrality(G)
+    functions.katz_centrality(G)
+    functions.clustering_coefficient(G)
     functions.average_path_length(G)
-    #
-    # functions.harmonic_centrality(G)
-    # functions.local_reaching_centrality(G)
-    # functions.average_neighbor_degree(G)
+    
+    functions.harmonic_centrality(G)
+    functions.local_reaching_centrality(G)
+    functions.average_neighbor_degree(G)
 
-    # functions.correlation(G, G)
+    functions.correlation(G, G)
 
 # -------------------------------------------------------------------------------------------
 
 
 def weightedGraph_runFunctions(G, G2):
 
-    # functions.illustrate_graph(G2)
-    # functions.degree_distribution(G)
-    # functions.betweenness_centrality(G2)
-    # functions.pagerank(G)
-    # functions.closeness_centrality(G2)
-    # try:
-    #     functions.eigenvector_centrality(G)
-    # except Exception as e:
-    #     print('eigenVector_centrality function: ' + str(e))
-    # try:
-    #     functions.katz_centrality(G)
-    # except Exception as e:
-    #     print('katz_centrality function: ' + str(e))
-    # functions.clustering_coefficient(G)
+    functions.illustrate_graph(G2)
+    functions.degree_distribution(G)
+    functions.betweenness_centrality(G2)
+    functions.pagerank(G)
+    functions.closeness_centrality(G2)
+    try:
+        functions.eigenvector_centrality(G)
+    except Exception as e:
+        print('eigenVector_centrality function: ' + str(e))
+    try:
+        functions.katz_centrality(G)
+    except Exception as e:
+        print('katz_centrality function: ' + str(e))
+    functions.clustering_coefficient(G)
     functions.average_path_length(G2)
-    #
-    # functions.harmonic_centrality(G2)
-    # functions.local_reaching_centrality(G)
-    # functions.average_neighbor_degree(G)
+    
+    functions.harmonic_centrality(G2)
+    functions.local_reaching_centrality(G)
+    functions.average_neighbor_degree(G)
 
-    # functions.correlation(G, G2)
+    functions.correlation(G, G2)
 
 # -------------------------------------------------------------------------------------------
 
