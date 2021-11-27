@@ -362,7 +362,7 @@ def removing_outliers(x, y, num_of_removals):
     x_median = np.median(x)
     y_median = np.median(y)
     n = len(x)
-    d = [math.sqrt(pow(x[i] - x_median, 2) + pow(y[i] - y_median, 2)) for i in range(n)]
+    d = [math.sqrt(pow((x[i] - x_median)/x_median, 2) + pow((y[i] - y_median)/y_median, 2)) for i in range(n)]      # normalized distance
     for i in range(num_of_removals):
         max_index = d.index(max(d))
         del d[max_index]
@@ -388,7 +388,7 @@ def correlation(G, G2):
     x = measure_criteria_vec(x_index, G, G2)
     y = measure_criteria_vec(y_index, G, G2)
 
-    x[1], y[1] = removing_outliers(x[1], y[1], 1)
+    x[1], y[1] = removing_outliers(x[1], y[1], 1)   # Change the number of removals if needed
 
     plt.scatter(x[1], y[1], facecolors='none', edgecolors='limegreen', s=20, label='genuine')
     plt.scatter(x[0], y[0], facecolors='none', edgecolors='tomato', s=20, label='fake')
