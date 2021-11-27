@@ -361,9 +361,11 @@ def removing_outliers(x, y, num_of_removals):
 
     x_median = np.median(x)
     y_median = np.median(y)
+    x_normalizer = (np.percentile(x, 25) + np.percentile(x, 75)) / 2
+    y_normalizer = (np.percentile(y, 25) + np.percentile(y, 75)) / 2    
     n = len(x)
     # d = [math.sqrt(pow(x[i] - x_median, 2) + pow(y[i] - y_median, 2)) for i in range(n)]
-    d = [math.sqrt(pow((x[i] - x_median)/x_median, 2) + pow((y[i] - y_median)/y_median, 2)) for i in range(n)]      # normalized distance
+    d = [math.sqrt(pow((x[i] - x_median)/x_normalizer, 2) + pow((y[i] - y_median)/y_normalizer, 2)) for i in range(n)]      # normalized distance
     for i in range(num_of_removals):
         max_index = d.index(max(d))
         del d[max_index]
