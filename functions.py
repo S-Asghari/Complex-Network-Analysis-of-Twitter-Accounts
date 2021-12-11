@@ -405,3 +405,37 @@ def correlation(G, G2):
     print("runtime = " + str(end_time - start_time) + " sec")
 
     plt.show()
+
+# -------------------------------------------------------------------------------------------
+
+
+def in_deg_2ndVer(G, n):
+
+    in_deg = 0
+    edges = G.edges.data("weight", default=1)
+    for item in edges:
+        if item[1] == n:
+            in_deg += item[2]
+
+    return in_deg
+
+# -------------------------------------------------------------------------------------------
+
+
+def out_deg_2ndVer(G, n):
+
+    out_deg = 0
+    edges = G.edges.data("weight", default=1)
+    for item in edges:
+        if item[0] == n:
+            out_deg += item[2]
+
+    return out_deg
+
+# -------------------------------------------------------------------------------------------
+
+
+def deg_2ndVer(G, n):
+
+    deg = in_deg_2ndVer(G, n) + out_deg_2ndVer(G, n)
+    return deg
