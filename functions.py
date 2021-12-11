@@ -439,3 +439,16 @@ def deg_2ndVer(G, n):
 
     deg = in_deg_2ndVer(G, n) + out_deg_2ndVer(G, n)
     return deg
+
+# -------------------------------------------------------------------------------------------
+
+
+def avg_neighbor_deg_2ndVer(G):     # source & target= 'in+out'
+
+    edges = G.edges.data("weight", default=1)
+    neighbors = {n : set.union({item[1] for item in edges if item[0] == n},
+                               {item[0] for item in edges if item[1] == n}) for n in G.nodes}
+    avg_neighbor_deg = {i : 0 if deg_2ndVer(G, i) == 0 else
+                            sum([deg_2ndVer(G, j) for j in neighbors[i]]) / deg_2ndVer(G, i) for i in G.nodes}
+
+    return avg_neighbor_deg
