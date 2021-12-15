@@ -452,3 +452,60 @@ def avg_neighbor_deg_2ndVer(G):     # source & target= 'in+out'
                             sum([deg_2ndVer(G, j) for j in neighbors[i]]) / deg_2ndVer(G, i) for i in G.nodes}
 
     return avg_neighbor_deg
+
+# -------------------------------------------------------------------------------------------
+
+
+def minDistance(G, dist, sptSet):
+
+    min = sys.maxsize
+    min_index = None
+
+    for v in G.nodes:
+        if dist[v] < min and sptSet[v] is False:
+            min = dist[v]
+            min_index = v
+
+    return min_index
+
+# -------------------------------------------------------------------------------------------
+
+
+def dijkstra(G, src):
+
+    dist = {n: sys.maxsize for n in G.nodes}
+    dist[src] = 0
+    sptSet = {n: False for n in G.nodes}
+
+    for count in range(len(G.nodes)):
+
+        u = minDistance(G, dist, sptSet)
+        sptSet[u] = True
+
+        for v in G.nodes:
+            try:
+                if sptSet[v] is False and dist[v] > dist[u] + G[u][v]['weight']:
+                    dist[v] = dist[u] + G[u][v]['weight']
+            except:     # There's no edge from u to v
+                continue
+
+    return dist
+
+# -------------------------------------------------------------------------------------------
+
+
+def shortest_path_len_2ndVer(G):
+
+    result = {n: dijkstra(G, n) for n in G.nodes}
+    return result
+
+# -------------------------------------------------------------------------------------------
+
+
+def has_path(G, u, v):
+
+    shortest_path_len = shortest_path_len_2ndVer(G)[u][v]
+    if shortest_path_len == sys.maxsize:
+        return False
+    else:
+        return True
