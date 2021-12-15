@@ -511,3 +511,11 @@ def has_path(G, u, v):
     else:
         return False
     
+# -------------------------------------------------------------------------------------------
+
+
+def harmonic_centrality_2ndVer(G):
+
+    return {u: sum([1/shortest_path_len_2ndVer(G)[v][u]
+                    for v in G.nodes if v != u and has_path(G, v, u)])
+            for u in G.nodes}
