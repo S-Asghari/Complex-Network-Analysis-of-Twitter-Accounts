@@ -519,3 +519,25 @@ def harmonic_centrality_2ndVer(G):
     return {u: sum([1/shortest_path_len_2ndVer(G)[v][u]
                     for v in G.nodes if v != u and has_path(G, v, u)])
             for u in G.nodes}
+
+# -------------------------------------------------------------------------------------------
+
+
+def closeness_centrality_2ndVer(G):
+
+    N = len(G.nodes)
+    result = {}
+
+    for u in G.nodes:
+        n = 0
+        for v in G.nodes:
+            if has_path(G, v, u):
+                n += 1
+        summ = sum([shortest_path_len_2ndVer(G)[v][u]
+                    for v in G.nodes if v != u and has_path(G, v, u)])
+        if summ == 0:
+            result[u] = 0
+        else:
+            result[u] = ((n-1) / (N-1)) * ((n-1) / summ)
+
+    return result
