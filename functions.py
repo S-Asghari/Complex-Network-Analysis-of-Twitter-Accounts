@@ -473,6 +473,11 @@ def minDistance(G, dist, sptSet):
 
 def dijkstra(G, src):
 
+    edge_list = G.edges.data("weight", default=1)   # [(u1, v1, w1), (u2, v2, w2), ...]
+    edge_dic = {}   # {(u1, v1): w1, (u2, v2): w2, ...}
+    for item in edge_list:
+        edge_dic[(item[0], item[1])] = item[2]
+
     dist = {n: sys.maxsize for n in G.nodes}
     dist[src] = 0
     sptSet = {n: False for n in G.nodes}
@@ -483,11 +488,8 @@ def dijkstra(G, src):
         sptSet[u] = True
 
         for v in G.nodes:
-            try:
-                if sptSet[v] is False and dist[v] > dist[u] + G[u][v]['weight']:
-                    dist[v] = dist[u] + G[u][v]['weight']
-            except:     # There's no edge from u to v
-                continue
+            if (u, v) in edge_dic and sptSet[v] is False and dist[v] > dist[u] + edge_dic[(u, v)]:
+                dist[v] = dist[u] + edge_dic[(u, v)]
 
     return dist
 
