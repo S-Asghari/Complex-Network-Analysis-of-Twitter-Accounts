@@ -491,7 +491,7 @@ def dijkstra(G, src):
             if (u, v) in edge_dic and sptSet[v] is False and dist[v] > dist[u] + edge_dic[(u, v)]:
                 dist[v] = dist[u] + edge_dic[(u, v)]
 
-    return dist
+    return {n: dist[n] for n in dist if dist[n] < sys.maxsize}
 
 # -------------------------------------------------------------------------------------------
 
@@ -506,9 +506,8 @@ def shortest_path_len_2ndVer(G):
 
 def has_path(G, u, v):
 
-    shortest_path_len = shortest_path_len_2ndVer(G)[u][v]
-    if shortest_path_len == sys.maxsize:
-        return False
-    else:
+    if v in shortest_path_len_2ndVer(G)[u]:
         return True
+    else:
+        return False
     
