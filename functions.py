@@ -523,7 +523,7 @@ def harmonic_centrality_2ndVer(G):
 # -------------------------------------------------------------------------------------------
 
 
-def closeness_centrality_2ndVer(G):
+def closeness_centrality_2ndVer(G):     # improved version (Wasserman & Faust formula)
 
     N = len(G.nodes)
     result = {}
