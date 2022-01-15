@@ -563,7 +563,7 @@ def eigenvector_centrality_2ndVer(G):
 
     for count in range(max_iter):
         Ax = np.dot(A,x)
-        m = max(Ax)
+        m = max(Ax)     # largest eigenvalue
         x = np.dot(1/m, Ax)
 
     return {list(nd)[i]:x[i] for i in range(N)}
