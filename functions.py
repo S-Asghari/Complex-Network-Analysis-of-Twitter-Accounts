@@ -542,3 +542,28 @@ def closeness_centrality_2ndVer(G):     # improved version (Wasserman & Faust fo
 
     return result
 
+# -------------------------------------------------------------------------------------------
+
+
+def eigenvector_centrality_2ndVer(G):
+
+    nodes = G.nodes
+    N = len(nodes)
+    nd = {list(G.nodes)[n]:n for n in range(N)}     # node dictionary
+    edges = G.edges.data("weight", default=1)
+
+    # Using A+I instead of A
+    A = [[1 if n2 == n1 else 0 for n2 in G.nodes] for n1 in G.nodes]
+    for item in edges:
+        A[nd[item[0]]][nd[item[1]]] += item[2]
+
+    max_iter = 200
+    x = [0.2 for n in range(N)]
+    x[0] = 1
+
+    for count in range(max_iter):
+        Ax = np.dot(A,x)
+        m = max(Ax)
+        x = np.dot(1/m, Ax)
+
+    return {list(nd)[i]:x[i] for i in range(N)}
