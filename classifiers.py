@@ -1,13 +1,22 @@
 import pandas as pd
+from datetime import datetime
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 # from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
-user_fields = ['id']    # must be changed!
+user_fields = ['followers_count', 'friends_count', 'created_at']
+# Add: tweet_count, retweet_count, reply_count, favorite_count, num_hashtags, num_urls, num_mentions
+
 fake_user_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\FSF\users.csv', usecols=user_fields)
 genuine_user_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\E13\users.csv', usecols=user_fields)
+
+X = fake_user_df.values.tolist() + genuine_user_df.values.tolist()
+X = [[x[0], x[1], datetime.strptime(x[2], "%a %b %d %H:%M:%S +0000 %Y").timestamp()] for x in X]
+Y = [0 for i in range(len(fake_user_df))] + [1 for i in range(len(genuine_user_df))]
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.20, random_state=27)
 
 
 def logreg_classifier(X_train, Y_train, X_test, Y_test):
@@ -47,9 +56,9 @@ print("6. Long Short-Term Memory Network")
 classifier = input()
 
 if classifier == '1':
-    accuracy = logreg_classifier(X_train, Y_train, X_test, Y_test)
+    accuracy_scr = logreg_classifier(X_train, Y_train, X_test, Y_test)
 elif classifier == '2':
-    accuracy = svm_classifier(X_train, Y_train, X_test, Y_test)
+    accuracy_scr = svm_classifier(X_train, Y_train, X_test, Y_test)
 # elif classifier == '3':
 #     accuracy = knn_classifier(X_train, Y_train, X_test, Y_test)
 # elif classifier == '4':
@@ -59,4 +68,4 @@ elif classifier == '2':
 # elif classifier == '6':
 #     accuracy = lstm_classifier(X_train, Y_train, X_test, Y_test)
 
-print("accuracy: " + str(accuracy))
+print("accuracy: " + str(accuracy_scr))
