@@ -5,6 +5,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
 # from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
@@ -19,7 +20,7 @@ X = [[x[0], x[1], datetime.strptime(x[2], "%a %b %d %H:%M:%S +0000 %Y").timestam
 y = [0 for i in range(len(fake_user_df))] + [1 for i in range(len(genuine_user_df))]    # Y:labels
 
 # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
-n_fold = 3
+n_fold = 5
 kf = KFold(n_splits=n_fold, shuffle=True, random_state=42)
 
 
@@ -55,9 +56,14 @@ def rf_classifier(X_train, y_train, X_test, y_test):
     return accuracy_score(y_true=y_test, y_pred=rf_prediction)
 
 
-# def cnn_classifier(X_train, y_train, X_test, y_test):
-#
-#
+def cnn_classifier(X_train, y_train, X_test, y_test):
+
+    mlp_clf = MLPClassifier(hidden_layer_sizes=(12, 5), max_iter=300, random_state=1)
+    mlp_clf.fit(X=X_train, y=y_train)
+    mlp_prediction = mlp_clf.predict(X=X_test)
+    return accuracy_score(y_true=y_test, y_pred=mlp_prediction)
+
+
 # def lstm_classifier(X_train, y_train, X_test, y_test):
 
 print("Which classifier do you want to use?")
@@ -84,8 +90,8 @@ for train_index, test_index in kf.split(X):
         accuracy_scr += knn_classifier(X_train, y_train, X_test, y_test)
     elif classifier == '4':
         accuracy_scr += rf_classifier(X_train, y_train, X_test, y_test)
-    # elif classifier == '5':
-    #     accuracy_scr += cnn_classifier(X_train, y_train, X_test, y_test)
+    elif classifier == '5':
+        accuracy_scr += cnn_classifier(X_train, y_train, X_test, y_test)
     # elif classifier == '6':
     #     accuracy_scr += lstm_classifier(X_train, y_train, X_test, y_test)
 
