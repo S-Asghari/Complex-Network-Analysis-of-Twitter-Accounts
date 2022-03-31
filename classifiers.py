@@ -4,7 +4,7 @@ from datetime import datetime
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
-# from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 # from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
@@ -26,25 +26,35 @@ kf = KFold(n_splits=n_fold, shuffle=True, random_state=42)
 def logreg_classifier(X_train, y_train, X_test, y_test):
 
     logreg_clf = LogisticRegression()
-    logreg_clf.fit(X_train, y_train)
-    logreg_prediction = logreg_clf.predict(X_test)
-    return accuracy_score(logreg_prediction, y_test)
+    logreg_clf.fit(X=X_train, y=y_train)
+    logreg_prediction = logreg_clf.predict(X=X_test)
+    return accuracy_score(y_true=y_test, y_pred=logreg_prediction)
 
 
 def svm_classifier(X_train, y_train, X_test, y_test):
 
     SVC_model = SVC()
-    SVC_model.fit(X_train, y_train)
-    SVC_prediction = SVC_model.predict(X_test)
-    return accuracy_score(SVC_prediction, y_test)
+    SVC_model.fit(X=X_train, y=y_train)
+    SVC_prediction = SVC_model.predict(X=X_test)
+    return accuracy_score(y_true=y_test, y_pred=SVC_prediction)
 
 
-# def knn_classifier(X_train, y_train, X_test, y_test):
-#
-#
-# def rf_classifier(X_train, y_train, X_test, y_test):
-#
-#
+def knn_classifier(X_train, y_train, X_test, y_test):
+
+    KNN_model = KNeighborsClassifier(n_neighbors=10)
+    KNN_model.fit(X=X_train, y=y_train)
+    KNN_prediction = KNN_model.predict(X=X_test)
+    return accuracy_score(y_true=y_test, y_pred=KNN_prediction)
+
+
+def rf_classifier(X_train, y_train, X_test, y_test):
+
+    rf_clf = RandomForestClassifier()
+    rf_clf.fit(X=X_train, y=y_train)
+    rf_prediction = rf_clf.predict(X=X_test)
+    return accuracy_score(y_true=y_test, y_pred=rf_prediction)
+
+
 # def cnn_classifier(X_train, y_train, X_test, y_test):
 #
 #
@@ -62,20 +72,22 @@ classifier = input()
 accuracy_scr = 0
 
 for train_index, test_index in kf.split(X):
+
     X_train, X_test = np.array(X)[train_index], np.array(X)[test_index]
     y_train, y_test = np.array(y)[train_index], np.array(y)[test_index]
+
     if classifier == '1':
         accuracy_scr += logreg_classifier(X_train, y_train, X_test, y_test)
     elif classifier == '2':
         accuracy_scr += svm_classifier(X_train, y_train, X_test, y_test)
-    # elif classifier == '3':
-    #     accuracy += knn_classifier(X_train, y_train, X_test, y_test)
-    # elif classifier == '4':
-    #     accuracy += rf_classifier(X_train, y_train, X_test, y_test)
+    elif classifier == '3':
+        accuracy_scr += knn_classifier(X_train, y_train, X_test, y_test)
+    elif classifier == '4':
+        accuracy_scr += rf_classifier(X_train, y_train, X_test, y_test)
     # elif classifier == '5':
-    #     accuracy += cnn_classifier(X_train, y_train, X_test, y_test)
+    #     accuracy_scr += cnn_classifier(X_train, y_train, X_test, y_test)
     # elif classifier == '6':
-    #     accuracy += lstm_classifier(X_train, y_train, X_test, y_test)
+    #     accuracy_scr += lstm_classifier(X_train, y_train, X_test, y_test)
 
 
 print("accuracy: " + str(accuracy_scr/n_fold))
