@@ -10,14 +10,28 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
 
-user_fields = ['followers_count', 'friends_count', 'created_at']
-# Add: tweet_count, retweet_count, reply_count, favorite_count, num_hashtags, num_urls, num_mentions
+user_fields = ['id', 'followers_count', 'friends_count', 'created_at']
+tweet_fields = ['user_id', 'retweet_count', 'favorite_count', 'num_hashtags', 'num_urls']
+
 fake_user_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\FSF\users.csv', usecols=user_fields)
+fake_tweet_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\FSF\tweets.csv', usecols=tweet_fields, encoding='latin1')
 genuine_user_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\E13\users.csv', usecols=user_fields)
+genuine_tweet_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\E13\tweets.csv', usecols=tweet_fields, encoding='latin1')
 
 X = fake_user_df.values.tolist() + genuine_user_df.values.tolist()  # X:features
-X = [[x[0], x[1], datetime.strptime(x[2], "%a %b %d %H:%M:%S +0000 %Y").timestamp()] for x in X]
+X2 = fake_tweet_df.values.tolist() + genuine_tweet_df.values.tolist()
+X = [[x[0], x[1], x[2], datetime.strptime(x[3], "%a %b %d %H:%M:%S +0000 %Y").timestamp(), 0, 0, 0, 0, 0] for x in X]
+for x in X:
+    for x2 in X2:
+        if x2[0] == x[0]:
+            x[4] += 1       # tweet count
+            x[5] += x2[1]
+            x[6] += x2[2]
+            x[7] += x2[3]
+            x[8] += x2[4]
+X = [[x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8]] for x in X if all(str(i) != 'nan' for i in x)]
 y = [0 for i in range(len(fake_user_df))] + [1 for i in range(len(genuine_user_df))]    # Y:labels
+print(X)
 
 # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
 n_fold = 5
