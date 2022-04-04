@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import networkx as nx
 from datetime import datetime
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
@@ -16,6 +17,10 @@ fake_user_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-20
 fake_tweet_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\FSF\tweets.csv', usecols=tweet_fields, encoding='latin1')
 genuine_user_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\E13\users.csv', usecols=user_fields)
 genuine_tweet_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\E13\tweets.csv', usecols=tweet_fields, encoding='latin1')
+G = nx.read_gexf(r'C:\Users\Sara\Desktop\twitterProject\results\storage\FollowerFollowingGraph.gexf')
+
+harmonic_centrality = nx.harmonic_centrality(G)
+l_reaching_centrality = {n: nx.local_reaching_centrality(G, n) for n in G.nodes()}
 
 X = fake_user_df.values.tolist() + genuine_user_df.values.tolist()  # X:features
 X2 = fake_tweet_df.values.tolist() + genuine_tweet_df.values.tolist()
@@ -28,6 +33,10 @@ for x in X:
             x[6] += x2[2]
             x[7] += x2[3]
             x[8] += x2[4]
+X_prime = [[x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8],
+            harmonic_centrality[str(x[0])] if str(x[0]) in harmonic_centrality else 0.0,
+            l_reaching_centrality[str(x[0])] if str(x[0]) in l_reaching_centrality else 0.0]
+           for x in X if all(str(i) != 'nan' for i in x)]
 X = [[x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8]] for x in X if all(str(i) != 'nan' for i in x)]
 y = [0 for i in range(len(fake_user_df))] + [1 for i in range(len(genuine_user_df))]    # Y:labels
 
@@ -74,25 +83,39 @@ def cnn_classifier(X_train, y_train, X_test, y_test):
 
 # def lstm_classifier(X_train, y_train, X_test, y_test):
 
-accuracy_scr = [[0 for j in range(3)] for i in range(5)]
 
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
-for n_fold in range(3, 6):
-    kf = KFold(n_splits=n_fold, shuffle=True, random_state=42)
-    for train_index, test_index in kf.split(X):
-        X_train, X_test = np.array(X)[train_index], np.array(X)[test_index]
-        y_train, y_test = np.array(y)[train_index], np.array(y)[test_index]
-        accuracy_scr[0][n_fold-3] += logreg_classifier(X_train, y_train, X_test, y_test)
-        accuracy_scr[1][n_fold-3] += svm_classifier(X_train, y_train, X_test, y_test)
-        accuracy_scr[2][n_fold-3] += knn_classifier(X_train, y_train, X_test, y_test)
-        accuracy_scr[3][n_fold-3] += rf_classifier(X_train, y_train, X_test, y_test)
-        accuracy_scr[4][n_fold-3] += cnn_classifier(X_train, y_train, X_test, y_test)
-        # accuracy_scr[5][n_fold-3] += lstm_classifier(X_train, y_train, X_test, y_test)
+def evaluate_classifiers(X, y):
 
-print("Without centrality measures:")
-print("1. Logistic Regression ➤ AVG of accuracy: " + str(sum(accuracy_scr[0][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
-print("2. Support Vector Machine ➤ accuracy: " + str(sum(accuracy_scr[1][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
-print("3. K Nearest Neighbors ➤ accuracy: " + str(sum(accuracy_scr[2][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
-print("4. Random Forest ➤ accuracy: " + str(sum(accuracy_scr[3][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
-print("5. Convolutional Neural Network ➤ accuracy: " + str(sum(accuracy_scr[4][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
-# print("6. Long Short-Term Memory Network ➤ accuracy: " + str(sum(accuracy_scr[5][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
+    accuracy_scr = [[0 for j in range(3)] for i in range(5)]
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
+    for n_fold in range(3, 6):
+        kf = KFold(n_splits=n_fold, shuffle=True, random_state=42)
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = np.array(X)[train_index], np.array(X)[test_index]
+            y_train, y_test = np.array(y)[train_index], np.array(y)[test_index]
+            accuracy_scr[0][n_fold - 3] += logreg_classifier(X_train, y_train, X_test, y_test)
+            accuracy_scr[1][n_fold - 3] += svm_classifier(X_train, y_train, X_test, y_test)
+            accuracy_scr[2][n_fold - 3] += knn_classifier(X_train, y_train, X_test, y_test)
+            accuracy_scr[3][n_fold - 3] += rf_classifier(X_train, y_train, X_test, y_test)
+            accuracy_scr[4][n_fold - 3] += cnn_classifier(X_train, y_train, X_test, y_test)
+            # accuracy_scr[5][n_fold-3] += lstm_classifier(X_train, y_train, X_test, y_test)
+    return accuracy_scr
+
+
+def print_results(accuracy_scr):
+
+    print("1. Logistic Regression ➤ AVG of accuracy: " + str(sum(accuracy_scr[0][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
+    print("2. Support Vector Machine ➤ accuracy: " + str(sum(accuracy_scr[1][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
+    print("3. K Nearest Neighbors ➤ accuracy: " + str(sum(accuracy_scr[2][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
+    print("4. Random Forest ➤ accuracy: " + str(sum(accuracy_scr[3][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
+    print("5. Convolutional Neural Network ➤ accuracy: " + str(sum(accuracy_scr[4][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
+    # print("6. Long Short-Term Memory Network ➤ accuracy: " + str(sum(accuracy_scr[5][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
+
+
+accuracy_scr = evaluate_classifiers(X, y)
+print("Without using the centrality measures:")
+print_results(accuracy_scr)
+
+accuracy_scr = evaluate_classifiers(X_prime, y)
+print("Using centrality measures:")
+print_results(accuracy_scr)
