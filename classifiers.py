@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import networkx as nx
+from statistics import mean
 from datetime import datetime
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
@@ -19,8 +20,23 @@ genuine_user_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci
 genuine_tweet_df = pd.read_csv(r'C:\Users\Sara\Desktop\twitterProject\data\cresci-2015\E13\tweets.csv', usecols=tweet_fields, encoding='latin1')
 G = nx.read_gexf(r'C:\Users\Sara\Desktop\twitterProject\results\storage\FollowerFollowingGraph.gexf')
 
+
+def Average(lst):
+
+    avg = 0
+    if len(lst) > 0:
+        avg = mean(lst)
+    return avg
+
+
 harmonic_centrality = nx.harmonic_centrality(G)
 l_reaching_centrality = {n: nx.local_reaching_centrality(G, n) for n in G.nodes()}
+shortest_path_len = dict(nx.shortest_path_length(G))
+avg_incoming_path_len = {v: Average([shortest_path_len[u][v] for u in G.nodes if u != v and nx.has_path(G,u,v)]) for v in G.nodes}
+avg_outgoing_path_len = {u: Average([shortest_path_len[u][v] for v in G.nodes if v != u and nx.has_path(G,u,v)]) for u in G.nodes}
+avg_path_len = {n: mean([avg_incoming_path_len[n], avg_outgoing_path_len[n]])
+                    if (avg_incoming_path_len[n] > 0 and avg_outgoing_path_len[n] > 0)
+                    else max(avg_incoming_path_len[n], avg_outgoing_path_len[n]) for n in G.nodes}
 
 X = fake_user_df.values.tolist() + genuine_user_df.values.tolist()  # X:features
 X2 = fake_tweet_df.values.tolist() + genuine_tweet_df.values.tolist()
@@ -34,8 +50,9 @@ for x in X:
             x[7] += x2[3]
             x[8] += x2[4]
 X_prime = [[x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8],
-            harmonic_centrality[str(x[0])] if str(x[0]) in harmonic_centrality else 0.0,
-            l_reaching_centrality[str(x[0])] if str(x[0]) in l_reaching_centrality else 0.0]
+            harmonic_centrality[str(x[0])] if str(x[0]) in G.nodes else 0.0,
+            l_reaching_centrality[str(x[0])] if str(x[0]) in G.nodes else 0.0,
+            avg_path_len[str(x[0])] if str(x[0]) in G.nodes else 0.0]
            for x in X if all(str(i) != 'nan' for i in x)]
 X = [[x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8]] for x in X if all(str(i) != 'nan' for i in x)]
 y = [0 for i in range(len(fake_user_df))] + [1 for i in range(len(genuine_user_df))]    # Y:labels
@@ -117,5 +134,5 @@ print("Without using the centrality measures:")
 print_results(accuracy_scr)
 
 accuracy_scr = evaluate_classifiers(X_prime, y)
-print("Using centrality measures:")
+print("\nUsing the centrality measures:")
 print_results(accuracy_scr)
