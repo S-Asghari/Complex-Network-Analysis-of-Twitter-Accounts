@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import networkx as nx
+from itertools import chain
 from statistics import mean
 from datetime import datetime
 from sklearn.linear_model import LogisticRegression
@@ -11,6 +12,12 @@ from sklearn.neural_network import MLPClassifier
 # from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Embedding
+from keras.preprocessing import sequence
 
 user_fields = ['id', 'followers_count', 'friends_count', 'created_at']
 tweet_fields = ['user_id', 'retweet_count', 'favorite_count', 'num_hashtags', 'num_urls']
@@ -57,13 +64,20 @@ X_prime = [[x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8],
 X = [[x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8]] for x in X if all(str(i) != 'nan' for i in x)]
 y = [0 for i in range(len(fake_user_df))] + [1 for i in range(len(genuine_user_df))]    # Y:labels
 
+X_mean = [mean([x[i] for x in X]) for i in range(8)]
+X_max = [max([abs(x[i]) for x in X]) for i in range(8)]
+X = [[(x[i]-X_mean[i])/X_max[i] for i in range(3, 5)] for x in X]
+X_prime_mean = [mean([x_p[i] for x_p in X_prime]) for i in range(11)]
+X_prime_max = [max([abs(x_p[i]) for x_p in X_prime]) for i in range(11)]
+X_prime = [[(x_p[i]-X_prime_mean[i])/X_prime_max[i] for i in chain(range(3, 5), range(8, 11))] for x_p in X_prime]
+
 
 def logreg_classifier(X_train, y_train, X_test, y_test):
 
     logreg_clf = LogisticRegression()
     logreg_clf.fit(X=X_train, y=y_train)
     logreg_prediction = logreg_clf.predict(X=X_test)
-    return accuracy_score(y_true=y_test, y_pred=logreg_prediction)
+    return accuracy_score(y_true=y_test, y_pred=logreg_prediction), f1_score(y_true=y_test, y_pred=logreg_prediction)
 
 
 def svm_classifier(X_train, y_train, X_test, y_test):
@@ -71,7 +85,7 @@ def svm_classifier(X_train, y_train, X_test, y_test):
     SVC_model = SVC()
     SVC_model.fit(X=X_train, y=y_train)
     SVC_prediction = SVC_model.predict(X=X_test)
-    return accuracy_score(y_true=y_test, y_pred=SVC_prediction)
+    return accuracy_score(y_true=y_test, y_pred=SVC_prediction), f1_score(y_true=y_test, y_pred=SVC_prediction)
 
 
 def knn_classifier(X_train, y_train, X_test, y_test):
@@ -79,7 +93,7 @@ def knn_classifier(X_train, y_train, X_test, y_test):
     KNN_model = KNeighborsClassifier(n_neighbors=10)
     KNN_model.fit(X=X_train, y=y_train)
     KNN_prediction = KNN_model.predict(X=X_test)
-    return accuracy_score(y_true=y_test, y_pred=KNN_prediction)
+    return accuracy_score(y_true=y_test, y_pred=KNN_prediction), f1_score(y_true=y_test, y_pred=KNN_prediction)
 
 
 def rf_classifier(X_train, y_train, X_test, y_test):
@@ -87,7 +101,7 @@ def rf_classifier(X_train, y_train, X_test, y_test):
     rf_clf = RandomForestClassifier()
     rf_clf.fit(X=X_train, y=y_train)
     rf_prediction = rf_clf.predict(X=X_test)
-    return accuracy_score(y_true=y_test, y_pred=rf_prediction)
+    return accuracy_score(y_true=y_test, y_pred=rf_prediction), f1_score(y_true=y_test, y_pred=rf_prediction)
 
 
 def cnn_classifier(X_train, y_train, X_test, y_test):
@@ -95,44 +109,67 @@ def cnn_classifier(X_train, y_train, X_test, y_test):
     mlp_clf = MLPClassifier(hidden_layer_sizes=(12, 5), max_iter=300, random_state=1)
     mlp_clf.fit(X=X_train, y=y_train)
     mlp_prediction = mlp_clf.predict(X=X_test)
-    return accuracy_score(y_true=y_test, y_pred=mlp_prediction)
+    return accuracy_score(y_true=y_test, y_pred=mlp_prediction), f1_score(y_true=y_test, y_pred=mlp_prediction)
 
 
 # def lstm_classifier(X_train, y_train, X_test, y_test):
+#     top_words = 5000
+#     max_review_length = 500
+#     embedding_vecor_length = 32
+#     model = Sequential()
+#     model.add(Embedding(top_words, embedding_vecor_length, input_length=max_review_length))
+#     model.add(LSTM(100))
+#     model.add(Dense(1, activation='sigmoid'))
+#     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+#     print(model.summary())
+#     model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=3, batch_size=64)
+#     scores = model.evaluate(X_test, y_test, verbose=0)
+#     print("Accuracy: %.2f%%" % (scores[1] * 100))
 
 
 def evaluate_classifiers(X, y):
 
     accuracy_scr = [[0 for j in range(3)] for i in range(5)]
+    f1_scr = [[0 for j in range(3)] for i in range(5)]
     # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=27)
     for n_fold in range(3, 6):
         kf = KFold(n_splits=n_fold, shuffle=True, random_state=42)
         for train_index, test_index in kf.split(X):
             X_train, X_test = np.array(X)[train_index], np.array(X)[test_index]
             y_train, y_test = np.array(y)[train_index], np.array(y)[test_index]
-            accuracy_scr[0][n_fold - 3] += logreg_classifier(X_train, y_train, X_test, y_test)
-            accuracy_scr[1][n_fold - 3] += svm_classifier(X_train, y_train, X_test, y_test)
-            accuracy_scr[2][n_fold - 3] += knn_classifier(X_train, y_train, X_test, y_test)
-            accuracy_scr[3][n_fold - 3] += rf_classifier(X_train, y_train, X_test, y_test)
-            accuracy_scr[4][n_fold - 3] += cnn_classifier(X_train, y_train, X_test, y_test)
+            accuracy_scr[0][n_fold - 3] += logreg_classifier(X_train, y_train, X_test, y_test)[0]
+            accuracy_scr[1][n_fold - 3] += svm_classifier(X_train, y_train, X_test, y_test)[0]
+            accuracy_scr[2][n_fold - 3] += knn_classifier(X_train, y_train, X_test, y_test)[0]
+            accuracy_scr[3][n_fold - 3] += rf_classifier(X_train, y_train, X_test, y_test)[0]
+            accuracy_scr[4][n_fold - 3] += cnn_classifier(X_train, y_train, X_test, y_test)[0]
             # accuracy_scr[5][n_fold-3] += lstm_classifier(X_train, y_train, X_test, y_test)
-    return accuracy_scr
+            f1_scr[0][n_fold - 3] += logreg_classifier(X_train, y_train, X_test, y_test)[1]
+            f1_scr[1][n_fold - 3] += svm_classifier(X_train, y_train, X_test, y_test)[1]
+            f1_scr[2][n_fold - 3] += knn_classifier(X_train, y_train, X_test, y_test)[1]
+            f1_scr[3][n_fold - 3] += rf_classifier(X_train, y_train, X_test, y_test)[1]
+            f1_scr[4][n_fold - 3] += cnn_classifier(X_train, y_train, X_test, y_test)[1]
+    return accuracy_scr, f1_scr
 
 
-def print_results(accuracy_scr):
+def print_results(accuracy_scr, f1_scr):
 
-    print("1. Logistic Regression ➤ AVG of accuracy: " + str(sum(accuracy_scr[0][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
-    print("2. Support Vector Machine ➤ accuracy: " + str(sum(accuracy_scr[1][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
-    print("3. K Nearest Neighbors ➤ accuracy: " + str(sum(accuracy_scr[2][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
-    print("4. Random Forest ➤ accuracy: " + str(sum(accuracy_scr[3][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
-    print("5. Convolutional Neural Network ➤ accuracy: " + str(sum(accuracy_scr[4][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
+    print("1. Logistic Regression ➤ AVG of accuracy: " + str(sum(accuracy_scr[0][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3) +
+          " | AVG of F1-score: " + str(sum(f1_scr[0][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
+    print("2. Support Vector Machine ➤ accuracy: " + str(sum(accuracy_scr[1][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3) +
+          " | AVG of F1-score: " + str(sum(f1_scr[1][n_fold - 3] / n_fold for n_fold in range(3, 6)) / 3))
+    print("3. K Nearest Neighbors ➤ accuracy: " + str(sum(accuracy_scr[2][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3) +
+          " | AVG of F1-score: " + str(sum(f1_scr[2][n_fold - 3] / n_fold for n_fold in range(3, 6)) / 3))
+    print("4. Random Forest ➤ accuracy: " + str(sum(accuracy_scr[3][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3) +
+          " | AVG of F1-score: " + str(sum(f1_scr[3][n_fold - 3] / n_fold for n_fold in range(3, 6)) / 3))
+    print("5. Convolutional Neural Network ➤ accuracy: " + str(sum(accuracy_scr[4][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3) +
+          " | AVG of F1-score: " + str(sum(f1_scr[4][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
     # print("6. Long Short-Term Memory Network ➤ accuracy: " + str(sum(accuracy_scr[5][n_fold-3]/n_fold for n_fold in range(3, 6)) / 3))
 
 
-accuracy_scr = evaluate_classifiers(X, y)
+accuracy_scr, f1_scr = evaluate_classifiers(X, y)
 print("Without using the centrality measures:")
-print_results(accuracy_scr)
+print_results(accuracy_scr, f1_scr)
 
-accuracy_scr = evaluate_classifiers(X_prime, y)
+accuracy_scr, f1_scr = evaluate_classifiers(X_prime, y)
 print("\nUsing the centrality measures:")
-print_results(accuracy_scr)
+print_results(accuracy_scr, f1_scr)
